@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Hatchi - Virtual Pet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .device-container {
+            background: #3d3d3d;
+            border-radius: 40px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .screen-outer {
+            background: #8a9e7a;
+            border: 6px solid #2a2a2a;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+
+        .stat-box {
+            background: rgba(200,210,190,0.8);
+            border: 2px solid #3d3d3d;
+            border-radius: 6px;
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 8px;
+            font-weight: bold;
+            color: #2a2a2a;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-progress {
+            height: 8px;
+            background: #5a6a4a;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: #2a2a2a;
+            transition: width 0.3s ease;
+        }
+
+        .screen-main {
+            background: #9bbc89;
+            min-height: 380px;
+            position: relative;
+            border: 3px solid #4a5a3a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .grid-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(0,0,0,0.03) 8px, rgba(0,0,0,0.03) 9px),
+                repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.03) 8px, rgba(0,0,0,0.03) 9px);
+            pointer-events: none;
+        }
+
+        .screen-icons {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .icon {
+            font-size: 20px;
+            color: #2a2a2a;
+            opacity: 0.7;
+        }
+
+        .pet-area {
+            position: relative;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .pet {
+            font-size: 120px;
+            filter: grayscale(100%) brightness(0);
+            animation: bounce 2.5s ease-in-out infinite;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+
+        .stage-label {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #2a2a2a;
+            letter-spacing: 2px;
+            padding: 10px;
+            background: rgba(200,210,190,0.6);
+            position: relative;
+            z-index: 2;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 25px;
+            padding: 0 10px;
+        }
+
+        .control-btn {
+            background: #5a5a5a;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 24px;
+            box-shadow: 0 4px 0 #2a2a2a, inset 0 -2px 5px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #2a2a2a, inset 0 -2px 5px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:hover {
+            background: #6a6a6a;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2a2a2a;
+            color: #9bbc89;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            border: 2px solid #5a5a5a;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            font-weight: bold;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        .lights-off {
+            background: #2a3a2a !important;
+        }
+
+        .lights-off .pet {
+            opacity: 0.2;
+        }
+
+        .lights-off .grid-pattern {
+            opacity: 0.3;
+        }
+
+        .modal-content {
+            background: #2a2a2a;
+            color: #9bbc89;
+            border: 3px solid #5a5a5a;
+        }
+
+        .mini-game {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .game-btn {
+            font-size: 40px;
+            padding: 25px;
+            margin: 10px;
+            border: 3px solid #5a5a5a;
+            border-radius: 15px;
+            cursor: pointer;
+            background: #3d3d3d;
+            transition: transform 0.1s;
+            display: inline-block;
+        }
+
+        .game-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 480px) {
+            .device-container {
+                padding: 20px 15px;
+            }
+            
+            .controls {
+                gap: 6px;
+                padding: 0 5px;
+            }
+            
+            .control-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 7px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-container">
+        <div class="screen-outer">
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <div class="stat-label">HUNGER</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="hunger-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">HYGIENE</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="hygiene-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">SMARTS</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="smarts-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ACTIVE</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="active-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">ENERGY</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="energy-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">HAPPY</div>
+                    <div class="stat-progress">
+                        <div class="stat-fill" id="happy-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-main" id="screen">
+                <div class="grid-pattern"></div>
+                <div class="screen-icons">
+                    <div class="icon">⚙️</div>
+                    <div class="icon">🖼️</div>
+                </div>
+                <div class="pet-area">
+                    <div class="pet" id="pet">🥚</div>
+                </div>
+                <div class="stage-label" id="stage">TAMAGO</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-btn" onclick="feed()" title="Feed">🍽️</div>
+            <div class="control-btn" onclick="clean()" title="Clean">🧽</div>
+            <div class="control-btn" onclick="playGame()" title="Play">🎮</div>
+            <div class="control-btn" onclick="toggleLight()" title="Light">💡</div>
+            <div class="control-btn" onclick="giveMedicine()" title="Medicine">💊</div>
+            <div class="control-btn" onclick="openShop()" title="Shop">🏪</div>
+            <div class="control-btn" onclick="showInfo()" title="Info">ℹ️</div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <!-- Modal untuk Mini Game -->
+    <div class="modal fade" id="gameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">🎮 MINI GAME</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body mini-game">
+                    <h4 style="color: #9bbc89;">Tap the Happy Face!</h4>
+                    <div id="game-area">
+                        <div class="game-btn" onclick="gameClick('😊')">😊</div>
+                        <div class="game-btn" onclick="gameClick('😢')">😢</div>
+                        <div class="game-btn" onclick="gameClick('😡')">😡</div>
+                    </div>
+                    <p class="mt-3" style="color: #9bbc89;">Score: <span id="game-score">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Info -->
+    <div class="modal fade" id="infoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">ℹ️ HATCHI INFO</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 style="color: #9bbc89;">📋 Panduan Perawatan:</h6>
+                    <ul class="text-start" style="color: #9bbc89;">
+                        <li>🍽️ <strong>Feed:</strong> Beri makan saat lapar</li>
+                        <li>🧽 <strong>Clean:</strong> Bersihkan kotoran</li>
+                        <li>🎮 <strong>Play:</strong> Main game untuk smarts & active</li>
+                        <li>💡 <strong>Light:</strong> Matikan saat tidur</li>
+                        <li>💊 <strong>Heal:</strong> Obati saat sakit</li>
+                    </ul>
+                    <hr class="border-secondary">
+                    <h6 style="color: #9bbc89;">🔄 Evolusi:</h6>
+                    <p class="small" style="color: #9bbc89;">Perawatan yang baik akan menghasilkan evolusi yang bagus!</p>
+                    <p class="small" style="color: #9bbc89;">🥚 → 🐣 → 🐥 → 🐦 / 🦅 / 🦉</p>
+                    <hr class="border-secondary">
+                    <button class="btn btn-danger btn-sm w-100" onclick="resetGame()">🔄 RESET GAME</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Game State
+        let stats = {
+            hunger: 100,
+            hygiene: 100,
+            smarts: 50,
+            active: 50,
+            energy: 100,
+            happy: 100
+        };
+
+        let stage = 0;
+        let age = 0;
+        let lightsOn = true;
+        let gameScore = 0;
+
+        const stages = [
+            { name: "TAMAGO", emoji: "🥚", minAge: 0 },
+            { name: "BABY", emoji: "🐣", minAge: 5 },
+            { name: "CHILD", emoji: "🐥", minAge: 15 },
+            { name: "ADULT", emoji: "🦅", minAge: 30, condition: "good" },
+            { name: "ADULT", emoji: "🐦", minAge: 30, condition: "normal" },
+            { name: "ADULT", emoji: "🦉", minAge: 30, condition: "poor" }
+        ];
+
+        // Update UI
+        function updateUI() {
+            for (let stat in stats) {
+                const val = Math.max(0, Math.min(100, stats[stat]));
+                const bar = document.getElementById(stat + '-bar');
+                if (bar) {
+                    bar.style.width = val + '%';
+                }
+            }
+        }
+
+        // Show Notification
+        function notify(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.style.display = 'block';
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+
+        // Feed Action
+        function feed() {
+            if (stats.hunger < 100) {
+                stats.hunger = Math.min(100, stats.hunger + 30);
+                stats.happy = Math.min(100, stats.happy + 10);
+                notify('🍽️ Yummy! Hatchi makan dengan lahap!');
+                updateUI();
+            } else {
+                notify('😋 Hatchi sudah kenyang!');
+            }
+        }
+
+        // Clean Action
+        function clean() {
+            if (stats.hygiene < 100) {
+                stats.hygiene = Math.min(100, stats.hygiene + 40);
+                stats.happy = Math.min(100, stats.happy + 10);
+                notify('🧽 Bersih dan wangi sekarang!');
+                updateUI();
+            } else {
+                notify('✨ Hatchi sudah bersih!');
+            }
+        }
+
+        // Play Game
+        function playGame() {
+            gameScore = 0;
+            document.getElementById('game-score').textContent = '0';
+            const modal = new bootstrap.Modal(document.getElementById('gameModal'));
+            modal.show();
+        }
+
+        function gameClick(emoji) {
+            if (emoji === '😊') {
+                gameScore += 10;
+                stats.smarts = Math.min(100, stats.smarts + 5);
+                stats.active = Math.min(100, stats.active + 5);
+                stats.happy = Math.min(100, stats.happy + 10);
+                stats.energy = Math.max(0, stats.energy - 5);
+                document.getElementById('game-score').textContent = gameScore;
+                updateUI();
+                if (gameScore >= 50) {
+                    notify('🎉 Selamat! Hatchi jadi lebih pintar!');
+                    bootstrap.Modal.getInstance(document.getElementById('gameModal')).hide();
+                }
+            } else {
+                stats.happy = Math.max(0, stats.happy - 5);
+                updateUI();
+            }
+        }
+
+        // Toggle Light
+        function toggleLight() {
+            lightsOn = !lightsOn;
+            const screen = document.getElementById('screen');
+            if (!lightsOn) {
+                screen.classList.add('lights-off');
+                stats.energy = Math.min(100, stats.energy + 20);
+                notify('💤 Lampu dimatikan. Hatchi tidur...');
+            } else {
+                screen.classList.remove('lights-off');
+                notify('💡 Lampu dinyalakan!');
+            }
+            updateUI();
+        }
+
+        // Give Medicine
+        function giveMedicine() {
+            const totalHealth = (stats.hunger + stats.hygiene + stats.energy) / 3;
+            if (totalHealth < 50) {
+                stats.hunger = Math.min(100, stats.hunger + 20);
+                stats.hygiene = Math.min(100, stats.hygiene + 20);
+                stats.energy = Math.min(100, stats.energy + 20);
+                stats.happy = Math.min(100, stats.happy + 15);
+                notify('💊 Obat diminum! Hatchi merasa lebih baik!');
+                updateUI();
+            } else {
+                notify('💚 Hatchi dalam kondisi sehat!');
+            }
+        }
+
+        // Shop (Simplified)
+        function openShop() {
+            notify('🏪 Shop: Beli makanan premium! (Coming Soon)');
+        }
+
+        // Show Info
+        function showInfo() {
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            modal.show();
+        }
+
+        // Reset Game
+        function resetGame() {
+            if (confirm('Yakin ingin reset Hatchi? Semua progress akan hilang!')) {
+                stats = { hunger: 100, hygiene: 100, smarts: 50, active: 50, energy: 100, happy: 100 };
+                stage = 0;
+                age = 0;
+                lightsOn = true;
+                document.getElementById('screen').classList.remove('lights-off');
+                updateStage();
+                updateUI();
+                notify('🔄 Game direset! Mulai dari awal!');
+                bootstrap.Modal.getInstance(document.getElementById('infoModal'))?.hide();
+            }
+        }
+
+        // Update Stage/Evolution
+        function updateStage() {
+            const avgCare = (stats.hunger + stats.hygiene + stats.happy) / 3;
+            let newStage = 0;
+
+            if (age >= 30) {
+                if (avgCare >= 80) newStage = 3; // Good
+                else if (avgCare >= 50) newStage = 4; // Normal
+                else newStage = 5; // Poor
+            } else if (age >= 15) {
+                newStage = 2;
+            } else if (age >= 5) {
+                newStage = 1;
+            }
+
+            if (newStage !== stage) {
+                stage = newStage;
+                document.getElementById('pet').textContent = stages[stage].emoji;
+                document.getElementById('stage').textContent = stages[stage].name;
+                notify('🎊 Hatchi berevolusi menjadi ' + stages[stage].name + '!');
+            }
+        }
+
+        // Auto decrease stats over time
+        setInterval(() => {
+            if (lightsOn) {
+                stats.hunger = Math.max(0, stats.hunger - 0.5);
+                stats.hygiene = Math.max(0, stats.hygiene - 0.3);
+                stats.energy = Math.max(0, stats.energy - 0.2);
+                stats.happy = Math.max(0, stats.happy - 0.2);
+            }
+
+            // Warnings
+            if (stats.hunger < 30 && lightsOn) notify('⚠️ Hatchi lapar!');
+            if (stats.hygiene < 30 && lightsOn) notify('⚠️ Hatchi kotor!');
+            if (stats.energy < 20 && lightsOn) notify('⚠️ Hatchi lelah, matikan lampu!');
+
+            age++;
+            updateStage();
+            updateUI();
+        }, 2000);
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
