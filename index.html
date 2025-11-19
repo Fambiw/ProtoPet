@@ -710,4 +710,1113 @@
             dark: { name: 'Shadow Virus', emoji: '👻', next: ['demon', 'phantom'] },
             angel: { name: 'Celestial Protector', emoji: '👼', next: [] },
             helper: { name: 'Bio Guardian', emoji: '🛡️', next: [] },
-            cosmic: { name: 'Star Drifter', emoji: '
+            cosmic: { name: 'Star Drifter', emoji: '🌟', next: [] },
+            glitch: { name: 'Data Anomaly', emoji: '💾', next: [] },
+            demon: { name: 'Void Spawn', emoji: '😈', next: [] },
+            phantom: { name: 'Ghost Virus', emoji: '👻', next: [] }
+        };
+
+        // Canvas and Animation
+        const canvas = document.getElementById('petCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationTime = 0;
+        let bounce = 0;
+        let petVelocityY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            initializeVirusDex();
+            startPetAnimation();
+            startStatsDecay();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Pet Animation
+        function startPetAnimation() {
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                animationTime += 0.02;
+                bounce = Math.sin(animationTime * 2) * 10;
+                
+                const glowPulse = Math.sin(animationTime * 3) * 0.3 + 0.7;
+                const pet = gameState.pet;
+                
+                // Apply gravity if jumping
+                if (petVelocityY !== 0) {
+                    pet.y += petVelocityY;
+                    petVelocityY += 0.5;
+                    if (pet.y >= 200) {
+                        pet.y = 200;
+                        petVelocityY = 0;
+                    }
+                }
+                
+                const centerX = pet.x;
+                const centerY = pet.y + bounce;
+                
+                // Glow effect
+                ctx.shadowBlur = 20 * glowPulse;
+                ctx.shadowColor = pet.color;
+                
+                // Draw based on evolution
+                if (pet.evolution === 'egg') {
+                    drawEgg(centerX, centerY);
+                } else if (pet.evolution === 'baby') {
+                    drawBabyVirus(centerX, centerY);
+                } else {
+                    drawAdvancedForm(centerX, centerY);
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function drawEgg(x, y) {
+            const pet = gameState.pet;
+            ctx.fillStyle = pet.color;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 60, 80, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Spots
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(x - 20, y - 20, 15, 0, Math.PI * 2);
+            ctx.arc(x + 15, y + 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shine
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x - 25, y - 30, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawBabyVirus(x, y) {
+            const pet = gameState.pet;
+            
+            // Body
+            ctx.fillStyle = pet.color;
+            ctx.beginPath();
+            ctx.arc(x, y, 50, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            const eyeColor = gameState.isDarkMode ? '#fff' : '#000';
+            ctx.fillStyle = eyeColor;
+            ctx.beginPath();
+            ctx.arc(x - 15, y - 10, 8, 0, Math.PI * 2);
+            ctx.arc(x + 15, y - 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pupils
+            const pupilColor = gameState.isDarkMode ? '#000' : '#fff';
+            ctx.fillStyle = pupilColor;
+            ctx.beginPath();
+            ctx.arc(x - 15 + Math.sin(animationTime) * 2, y - 10, 4, 0, Math.PI * 2);
+            ctx.arc(x + 15 + Math.sin(animationTime) * 2, y - 10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = eyeColor;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            if (pet.mood > 60) {
+                ctx.arc(x, y + 10, 15, 0, Math.PI);
+            } else if (pet.mood < 30) {
+                ctx.arc(x, y + 25, 15, Math.PI, 0);
+            } else {
+                ctx.moveTo(x - 15, y + 20);
+                ctx.lineTo(x + 15, y + 20);
+            }
+            ctx.stroke();
+            
+            // Spikes
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + animationTime;
+                const spikeX = x + Math.cos(angle) * 60;
+                const spikeY = y + Math.sin(angle) * 60;
+                ctx.fillStyle = pet.color;
+                ctx.beginPath();
+                ctx.arc(spikeX, spikeY, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawAdvancedForm(x, y) {
+            const pet = gameState.pet;
+            const size = 60;
+            
+            // Main body
+            ctx.fillStyle = pet.color;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Evolution-specific features
+            if (['friendly', 'angel', 'helper'].includes(pet.evolution)) {
+                // Halo
+                ctx.strokeStyle = pet.color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(x, y - 80, 25, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Wings
+                ctx.fillStyle = pet.color + '88';
+                ctx.beginPath();
+                ctx.ellipse(x - 50, y, 30, 50, -0.3 + Math.sin(animationTime * 2) * 0.2, 0, Math.PI * 2);
+                ctx.ellipse(x + 50, y, 30, 50, 0.3 - Math.sin(animationTime * 2) * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (['chaotic', 'cosmic', 'glitch'].includes(pet.evolution)) {
+                // Energy particles
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2 + animationTime * 2;
+                    const dist = 70 + Math.random() * 20;
+                    const px = x + Math.cos(angle) * dist;
+                    const py = y + Math.sin(angle) * dist;
+                    ctx.fillStyle = `hsl(${(animationTime * 100 + i * 30) % 360}, 100%, 50%)`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (['dark', 'demon', 'phantom'].includes(pet.evolution)) {
+                // Horns
+                ctx.fillStyle = '#ff0066';
+                ctx.beginPath();
+                ctx.moveTo(x - 40, y - 50);
+                ctx.lineTo(x - 50, y - 80);
+                ctx.lineTo(x - 30, y - 60);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + 40, y - 50);
+                ctx.lineTo(x + 50, y - 80);
+                ctx.lineTo(x + 30, y - 60);
+                ctx.fill();
+                
+                // Dark aura
+                ctx.fillStyle = 'rgba(255, 0, 102, 0.1)';
+                ctx.beginPath();
+                ctx.arc(x, y, size + 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Eyes
+            const eyeColor = gameState.isDarkMode ? '#fff' : '#000';
+            ctx.fillStyle = eyeColor;
+            ctx.beginPath();
+            ctx.arc(x - 20, y - 10, 10, 0, Math.PI * 2);
+            ctx.arc(x + 20, y - 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = pet.color;
+            ctx.beginPath();
+            ctx.arc(x - 20, y - 10, 5, 0, Math.PI * 2);
+            ctx.arc(x + 20, y - 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = eyeColor;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            if (pet.mood > 60) {
+                ctx.arc(x, y + 15, 20, 0, Math.PI);
+            } else {
+                ctx.arc(x, y + 30, 20, Math.PI, 0);
+            }
+            ctx.stroke();
+        }
+
+        // Canvas Interactions
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            drag({ clientX: touch.clientX, clientY: touch.clientY });
+        });
+        canvas.addEventListener('touchend', endDrag);
+        canvas.addEventListener('click', petTap);
+
+        function startDrag(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            
+            const pet = gameState.pet;
+            const distance = Math.sqrt((x - pet.x) ** 2 + (y - pet.y) ** 2);
+            
+            if (distance < 60) {
+                isDragging = true;
+                dragStartX = x - pet.x;
+                dragStartY = y - pet.y;
+            }
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            
+            gameState.pet.x = Math.max(60, Math.min(340, x - dragStartX));
+            gameState.pet.y = Math.max(60, Math.min(340, y - dragStartY));
+        }
+
+        function endDrag() {
+            isDragging = false;
+        }
+
+        function petTap(e) {
+            if (isDragging) return;
+            
+            const pet = gameState.pet;
+            petVelocityY = -10;
+            pet.mood = Math.min(100, pet.mood + 2);
+            pet.affinity = Math.min(100, pet.affinity + 1);
+            updateStats();
+            
+            showNotification('💚 ' + pet.name + ' senang!', 'success');
+        }
+
+        // Game Actions
+        function feedPet() {
+            const pet = gameState.pet;
+            if (pet.bioPoints < 5) {
+                showNotification('⚠️ BioPoints tidak cukup!', 'error');
+                return;
+            }
+            
+            pet.hunger = Math.min(100, pet.hunger + 30);
+            pet.energy = Math.min(100, pet.energy + 20);
+            pet.mood = Math.min(100, pet.mood + 10);
+            pet.affinity = Math.min(100, pet.affinity + 2);
+            pet.bioPoints += 5;
+            pet.totalXP += 10;
+            pet.level = Math.floor(pet.totalXP / 100) + 1;
+            pet.lastFed = Date.now();
+            
+            updateStats();
+            checkEvolution();
+            saveGame();
+            showNotification('🍔 Yummy! +5 BioPoints', 'success');
+        }
+
+        function cleanPet() {
+            const pet = gameState.pet;
+            pet.cleanliness = 100;
+            pet.mood = Math.min(100, pet.mood + 5);
+            pet.affinity = Math.min(100, pet.affinity + 1);
+            pet.bioPoints += 3;
+            pet.totalXP += 5;
+            pet.level = Math.floor(pet.totalXP / 100) + 1;
+            pet.lastCleaned = Date.now();
+            
+            updateStats();
+            checkEvolution();
+            saveGame();
+            showNotification('✨ Bersih sekali! +3 BioPoints', 'success');
+        }
+
+        function stabilizeMood() {
+            const pet = gameState.pet;
+            if (pet.bioPoints < 10) {
+                showNotification('⚠️ BioPoints tidak cukup!', 'error');
+                return;
+            }
+            
+            pet.mood = 100;
+            pet.stability = Math.min(100, pet.stability + 20);
+            pet.bioPoints -= 10;
+            pet.affinity = Math.min(100, pet.affinity + 5);
+            pet.totalXP += 15;
+            pet.level = Math.floor(pet.totalXP / 100) + 1;
+            
+            updateStats();
+            checkEvolution();
+            saveGame();
+            showNotification('😊 Mood membaik! +15 XP', 'success');
+        }
+
+        // Stats Update
+        function updateStats() {
+            const pet = gameState.pet;
+            
+            document.getElementById('energyStat').textContent = Math.round(pet.energy);
+            document.getElementById('energyBar').style.width = pet.energy + '%';
+            
+            document.getElementById('hungerStat').textContent = Math.round(pet.hunger);
+            document.getElementById('hungerBar').style.width = pet.hunger + '%';
+            
+            document.getElementById('moodStat').textContent = Math.round(pet.mood);
+            document.getElementById('moodBar').style.width = pet.mood + '%';
+            
+            document.getElementById('cleanStat').textContent = Math.round(pet.cleanliness);
+            document.getElementById('cleanBar').style.width = pet.cleanliness + '%';
+            
+            document.getElementById('affinityStat').textContent = Math.round(pet.affinity);
+            document.getElementById('affinityBar').style.width = pet.affinity + '%';
+            
+            document.getElementById('mutationStat').textContent = Math.round(pet.mutationRate);
+            document.getElementById('mutationBar').style.width = pet.mutationRate + '%';
+            
+            document.getElementById('bioPointsDisplay').textContent = '⭐ ' + pet.bioPoints + ' BP';
+            document.getElementById('petLevel').textContent = pet.level;
+            document.getElementById('petName').textContent = pet.name;
+            document.getElementById('petSpecies').textContent = evolutions[pet.evolution].name;
+            document.getElementById('habitatBadge').textContent = '🏠 ' + pet.habitat;
+            
+            const personalities = ['Curious', 'Aggressive', 'Shy', 'Hyper'];
+            const icons = ['bi-star-fill', 'bi-fire', 'bi-emoji-smile', 'bi-lightning-fill'];
+            const index = Math.floor(pet.affinity / 25);
+            pet.personality = personalities[Math.min(index, 3)];
+            document.getElementById('personalityBadge').innerHTML = 
+                `<i class="bi ${icons[Math.min(index, 3)]}"></i> ${pet.personality}`;
+        }
+
+        // Stats Decay
+        function startStatsDecay() {
+            setInterval(() => {
+                const pet = gameState.pet;
+                const timeSinceLastFed = Date.now() - pet.lastFed;
+                const timeSinceLastCleaned = Date.now() - pet.lastCleaned;
+                
+                const hungerDecay = Math.floor(timeSinceLastFed / 60000);
+                const cleanDecay = Math.floor(timeSinceLastCleaned / 120000);
+                
+                pet.hunger = Math.max(0, 100 - hungerDecay);
+                pet.cleanliness = Math.max(0, 100 - cleanDecay);
+                pet.energy = Math.max(0, pet.energy - 0.05);
+                pet.mood = Math.max(0, pet.mood - (pet.hunger < 30 ? 0.3 : 0.05));
+                
+                // Notifications
+                if (pet.hunger < 30 && Math.random() < 0.01) {
+                    showNotification('🍔 ' + pet.name + ' lapar! Beri makan!', 'warning');
+                }
+                if (pet.cleanliness < 30 && Math.random() < 0.01) {
+                    showNotification('🧹 Habitatku kotor! Tolong bersihkan!', 'warning');
+                }
+                
+                // Random mutation
+                if (pet.mutationRate > 50 && Math.random() < 0.001) {
+                    triggerMutation();
+                }
+                
+                updateStats();
+                saveGame();
+            }, 1000);
+        }
+
+        // Evolution System
+        function checkEvolution() {
+            const pet = gameState.pet;
+            const totalScore = pet.affinity + pet.mood + pet.cleanliness;
+            const avgCare = totalScore / 3;
+            
+            if (pet.evolution === 'egg' && pet.level >= 3) {
+                evolvePet('baby');
+            } else if (pet.evolution === 'baby' && pet.level >= 10) {
+                if (avgCare > 70) {
+                    evolvePet('friendly');
+                } else if (avgCare > 40) {
+                    evolvePet('chaotic');
+                } else {
+                    evolvePet('dark');
+                }
+            } else if (pet.level >= 20 && evolutions[pet.evolution].next.length > 0) {
+                const nextEvolutions = evolutions[pet.evolution].next;
+                const nextEvo = nextEvolutions[Math.floor(Math.random() * nextEvolutions.length)];
+                evolvePet(nextEvo);
+            }
+        }
+
+        function evolvePet(newForm) {
+            const pet = gameState.pet;
+            pet.evolution = newForm;
+            pet.species = evolutions[newForm].name;
+            
+            if (!gameState.virusDex.includes(newForm)) {
+                gameState.virusDex.push(newForm);
+            }
+            
+            updateStats();
+            initializeVirusDex();
+            saveGame();
+            showNotification('🎉 ' + pet.name + ' berevolusi menjadi ' + evolutions[newForm].name + '!', 'success');
+        }
+
+        function triggerMutation() {
+            const pet = gameState.pet;
+            const mutations = [
+                { type: 'color', desc: 'Warna tubuh berubah!' },
+                { type: 'rate', desc: 'Mutation rate meningkat!' }
+            ];
+            
+            const mutation = mutations[Math.floor(Math.random() * mutations.length)];
+            
+            if (mutation.type === 'color') {
+                const colors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#ff0066', '#9d00ff'];
+                pet.color = colors[Math.floor(Math.random() * colors.length)];
+            } else {
+                pet.mutationRate = Math.min(100, pet.mutationRate + 10);
+            }
+            
+            showNotification('🧬 MUTASI! ' + mutation.desc, 'mutation');
+            updateStats();
+            saveGame();
+        }
+
+        // VirusDex
+        function initializeVirusDex() {
+            const container = document.getElementById('virusDexContainer');
+            container.innerHTML = '';
+            
+            Object.keys(evolutions).forEach(evo => {
+                const isUnlocked = gameState.virusDex.includes(evo);
+                const card = document.createElement('div');
+                card.className = 'col-6 col-md-4';
+                card.innerHTML = `
+                    <div class="virusdex-card glass-panel p-3 text-center ${isUnlocked ? '' : 'locked'}">
+                        <div style="font-size: 3rem;">${isUnlocked ? evolutions[evo].emoji : '❓'}</div>
+                        <h6 class="mt-2 mb-1">${isUnlocked ? evolutions[evo].name : '???'}</h6>
+                        <small class="text-muted">${isUnlocked ? evo : 'Locked'}</small>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.getElementById('collectionCount').textContent = gameState.virusDex.length;
+        }
+
+        // Shop Functions
+        function buyColor(color) {
+            const pet = gameState.pet;
+            if (pet.bioPoints < 50) {
+                showNotification('⚠️ BioPoints tidak cukup! Butuh 50 BP', 'error');
+                return;
+            }
+            
+            pet.color = color;
+            pet.bioPoints -= 50;
+            updateStats();
+            saveGame();
+            showNotification('🎨 Warna berhasil dibeli!', 'success');
+        }
+
+        function buyHabitat(habitat, cost) {
+            const pet = gameState.pet;
+            if (pet.bioPoints < cost) {
+                showNotification(`⚠️ BioPoints tidak cukup! Butuh ${cost} BP`, 'error');
+                return;
+            }
+            
+            pet.habitat = habitat;
+            pet.bioPoints -= cost;
+            pet.mutationRate = Math.min(100, pet.mutationRate + 10);
+            updateStats();
+            saveGame();
+            showNotification(`🏠 Habitat upgrade berhasil!`, 'success');
+        }
+
+        function buyBooster(type, cost) {
+            const pet = gameState.pet;
+            if (pet.bioPoints < cost) {
+                showNotification(`⚠️ BioPoints tidak cukup! Butuh ${cost} BP`, 'error');
+                return;
+            }
+            
+            pet.bioPoints -= cost;
+            
+            if (type === 'energy') {
+                pet.energy = Math.min(100, pet.energy + 50);
+                showNotification('⚡ Energy boost berhasil!', 'success');
+            } else if (type === 'mutation') {
+                triggerMutation();
+            }
+            
+            updateStats();
+            saveGame();
+        }
+
+        // Mini Game
+        let miniGameState = {
+            isRunning: false,
+            score: 0,
+            playerY: 250,
+            obstacles: [],
+            gameSpeed: 5
+        };
+
+        function openMiniGame() {
+            document.getElementById('miniGameModal').classList.add('active');
+            startBioRunner();
+        }
+
+        function closeMiniGame() {
+            document.getElementById('miniGameModal').classList.remove('active');
+            miniGameState.isRunning = false;
+        }
+
+        function startBioRunner() {
+            const gameCanvas = document.getElementById('gameCanvas');
+            const gameCtx = gameCanvas.getContext('2d');
+            miniGameState = {
+                isRunning: true,
+                score: 0,
+                playerY: 250,
+                obstacles: [],
+                gameSpeed: 5
+            };
+            
+            document.getElementById('gameScore').textContent = '0';
+            
+            function gameLoop() {
+                if (!miniGameState.isRunning) return;
+                
+                gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                
+                // Player
+                gameCtx.fillStyle = gameState.pet.color;
+                gameCtx.beginPath();
+                gameCtx.arc(50, miniGameState.playerY, 20, 0, Math.PI * 2);
+                gameCtx.fill();
+                
+                // Obstacles
+                if (Math.random() < 0.02) {
+                    miniGameState.obstacles.push({
+                        x: gameCanvas.width,
+                        y: Math.random() * 400 + 50
+                    });
+                }
+                
+                miniGameState.obstacles = miniGameState.obstacles.filter(obs => {
+                    obs.x -= miniGameState.gameSpeed;
+                    
+                    // Draw obstacle
+                    gameCtx.fillStyle = '#ff0066';
+                    gameCtx.beginPath();
+                    gameCtx.arc(obs.x, obs.y, 15, 0, Math.PI * 2);
+                    gameCtx.fill();
+                    
+                    // Collision detection
+                    const distance = Math.sqrt((obs.x - 50) ** 2 + (obs.y - miniGameState.playerY) ** 2);
+                    if (distance < 35) {
+                        endBioRunner();
+                        return false;
+                    }
+                    
+                    return obs.x > -20;
+                });
+                
+                miniGameState.score++;
+                document.getElementById('gameScore').textContent = miniGameState.score;
+                
+                if (miniGameState.isRunning) {
+                    requestAnimationFrame(gameLoop);
+                }
+            }
+            
+            gameLoop();
+        }
+
+        document.getElementById('gameJumpBtn').addEventListener('click', () => {
+            miniGameState.playerY = Math.max(50, miniGameState.playerY - 100);
+            setTimeout(() => {
+                miniGameState.playerY = Math.min(450, miniGameState.playerY + 100);
+            }, 300);
+        });
+
+        function endBioRunner() {
+            miniGameState.isRunning = false;
+            const points = Math.floor(miniGameState.score / 50);
+            const xp = points * 2;
+            
+            gameState.pet.bioPoints += points;
+            gameState.pet.totalXP += xp;
+            gameState.pet.level = Math.floor(gameState.pet.totalXP / 100) + 1;
+            
+            updateStats();
+            checkEvolution();
+            saveGame();
+            
+            showNotification(`🎮 Score: ${miniGameState.score}! +${points} BP, +${xp} XP`, 'success');
+        }
+
+        // Page Navigation
+        function switchPage(pageId, button) {
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            gameState.isDarkMode = !gameState.isDarkMode;
+            document.body.className = gameState.isDarkMode ? 'dark-mode' : 'light-mode';
+            document.getElementById('themeToggle').innerHTML = gameState.isDarkMode ? 
+                '<i class="bi bi-moon-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+            saveGame();
+        });
+
+        // Settings
+        function updatePetName() {
+            const newName = document.getElementById('petNameInput').value.trim();
+            if (newName) {
+                gameState.pet.name = newName;
+                updateStats();
+                saveGame();
+                showNotification('✅ Nama berhasil diubah!', 'success');
+            }
+        }
+
+        function saveToCloud() {
+            localStorage.setItem('protopet_save', JSON.stringify(gameState));
+            showNotification('☁️ Data berhasil disimpan ke cloud!', 'success');
+        }
+
+        function loadFromCloud() {
+            const saved = localStorage.getItem('protopet_save');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                updateStats();
+                initializeVirusDex();
+                document.getElementById('petNameInput').value = gameState.pet.name;
+                showNotification('☁️ Data berhasil dimuat dari cloud!', 'success');
+            } else {
+                showNotification('⚠️ Tidak ada data tersimpan!', 'error');
+            }
+        }
+
+        function resetGame() {
+            if (confirm('Yakin ingin reset game? Semua progress akan hilang!')) {
+                localStorage.removeItem('protopet_save');
+                location.reload();
+            }
+        }
+
+        // Save & Load
+        function saveGame() {
+            localStorage.setItem('protopet_save', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('protopet_save');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                document.body.className = gameState.isDarkMode ? 'dark-mode' : 'light-mode';
+                document.getElementById('themeToggle').innerHTML = gameState.isDarkMode ? 
+                    '<i class="bi bi-moon-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+            }
+            updateStats();
+            document.getElementById('petNameInput').value = gameState.pet.name;
+        }
+
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            
+            if (type === 'success') {
+                notif.style.background = 'linear-gradient(135deg, #00ff88, #00cc66)';
+                notif.style.color = '#000';
+            } else if (type === 'error') {
+                notif.style.background = 'linear-gradient(135deg, #ff0066, #cc0055)';
+                notif.style.color = '#fff';
+            } else if (type === 'warning') {
+                notif.style.background = 'linear-gradient(135deg, #ffff00, #ffa500)';
+                notif.style.color = '#000';
+            } else if (type === 'mutation') {
+                notif.style.background = 'linear-gradient(135deg, #ff00ff, #9d00ff)';
+                notif.style.color = '#fff';
+            } else {
+                notif.style.background = 'linear-gradient(135deg, #00ffff, #00cccc)';
+                notif.style.color = '#000';
+            }
+            
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(saveGame, 30000);
+
+        // Daily Login Bonus
+        function checkDailyBonus() {
+            const lastLogin = localStorage.getItem('protopet_lastLogin');
+            const today = new Date().toDateString();
+            
+            if (lastLogin !== today) {
+                gameState.pet.bioPoints += 15;
+                updateStats();
+                saveGame();
+                localStorage.setItem('protopet_lastLogin', today);
+                showNotification('🎁 Daily Login Bonus: +15 BioPoints!', 'success');
+            }
+        }
+
+        // Check daily bonus on load
+        setTimeout(checkDailyBonus, 2000);
+
+        // Shake Detection (for mobile)
+        if (window.DeviceMotionEvent) {
+            let lastX = 0, lastY = 0, lastZ = 0;
+            let shakeThreshold = 15;
+            
+            window.addEventListener('devicemotion', (e) => {
+                const acc = e.accelerationIncludingGravity;
+                if (!acc) return;
+                
+                const deltaX = Math.abs(acc.x - lastX);
+                const deltaY = Math.abs(acc.y - lastY);
+                const deltaZ = Math.abs(acc.z - lastZ);
+                
+                if (deltaX > shakeThreshold || deltaY > shakeThreshold || deltaZ > shakeThreshold) {
+                    petVelocityY = -15;
+                    gameState.pet.mood = Math.max(0, gameState.pet.mood - 5);
+                    updateStats();
+                    showNotification('😵 ' + gameState.pet.name + ' terkejut!', 'warning');
+                }
+                
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
+            });
+        }
+
+        // Seasonal Events
+        function checkSeasonalEvent() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            
+            let event = null;
+            
+            // Halloween (October)
+            if (month === 10) {
+                event = { name: '🎃 Halloween Mutation', color: '#ff6600' };
+            }
+            // Christmas (December)
+            else if (month === 12) {
+                event = { name: '❄️ Winter Wonderland', color: '#00ffff' };
+            }
+            // New Year (January)
+            else if (month === 1 && day <= 7) {
+                event = { name: '🎆 Cosmic Mutation', color: '#9d00ff' };
+            }
+            // Summer (June-August)
+            else if (month >= 6 && month <= 8) {
+                event = { name: '☀️ Neon Festival', color: '#ffff00' };
+            }
+            
+            if (event) {
+                setTimeout(() => {
+                    showNotification(`🎉 Event: ${event.name}! Mutation rate +10%`, 'mutation');
+                    gameState.pet.mutationRate = Math.min(100, gameState.pet.mutationRate + 10);
+                    updateStats();
+                }, 5000);
+            }
+        }
+
+        checkSeasonalEvent();
+
+        // Service Worker Registration (PWA Support)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+                    const CACHE_NAME = 'protopet-v1';
+                    const urlsToCache = ['/'];
+                    
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(cache => cache.addAll(urlsToCache))
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => response || fetch(event.request))
+                        );
+                    });
+                `)).catch(() => {
+                    console.log('Service Worker registration failed');
+                });
+            });
+        }
+
+        // Notification Permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                Notification.requestPermission();
+            }, 10000);
+        }
+
+        // Send browser notification
+        function sendBrowserNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2300ff88"/></svg>'
+                });
+            }
+        }
+
+        // Enhanced notification system for critical stats
+        let lastHungerNotif = 0;
+        let lastCleanNotif = 0;
+
+        setInterval(() => {
+            const pet = gameState.pet;
+            const now = Date.now();
+            
+            if (pet.hunger < 20 && now - lastHungerNotif > 300000) {
+                sendBrowserNotification('ProtoPet', pet.name + ' sangat lapar! 🍔');
+                lastHungerNotif = now;
+            }
+            
+            if (pet.cleanliness < 20 && now - lastCleanNotif > 300000) {
+                sendBrowserNotification('ProtoPet', pet.name + ' butuh dibersihkan! 🧹');
+                lastCleanNotif = now;
+            }
+        }, 60000);
+
+        // Particle Effects
+        function createParticle(x, y, color) {
+            const canvas = document.getElementById('petCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const particles = [];
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    life: 30,
+                    color: color
+                });
+            }
+            
+            function animateParticles() {
+                particles.forEach((p, index) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    
+                    ctx.globalAlpha = p.life / 30;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    if (p.life <= 0) {
+                        particles.splice(index, 1);
+                    }
+                });
+                
+                ctx.globalAlpha = 1;
+                
+                if (particles.length > 0) {
+                    requestAnimationFrame(animateParticles);
+                }
+            }
+            
+            animateParticles();
+        }
+
+        // Enhanced feeding with particles
+        const originalFeedPet = feedPet;
+        feedPet = function() {
+            originalFeedPet();
+            createParticle(gameState.pet.x, gameState.pet.y, '#00ff88');
+        };
+
+        // Easter Egg: Konami Code
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            if (konamiCode.length > 10) konamiCode.shift();
+            
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                gameState.pet.bioPoints += 1000;
+                gameState.pet.mutationRate = 100;
+                updateStats();
+                showNotification('🎮 KONAMI CODE! +1000 BioPoints & Max Mutation!', 'mutation');
+                konamiCode = [];
+            }
+        });
+
+        // Fullscreen API
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Double-tap to fullscreen
+        let lastTap = 0;
+        canvas.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                toggleFullscreen();
+            }
+            lastTap = currentTime;
+        });
+
+        // Stats tooltip on hover
+        document.querySelectorAll('.stat-bar').forEach(bar => {
+            bar.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.02)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            bar.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Ambient sound effects (optional - user can enable)
+        let soundEnabled = false;
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(frequency = 440, duration = 100) {
+            if (!soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+
+        // Play sound on actions (subtle beeps)
+        const originalCleanPet = cleanPet;
+        cleanPet = function() {
+            originalCleanPet();
+            playBeep(600, 50);
+        };
+
+        const originalStabilizeMood = stabilizeMood;
+        stabilizeMood = function() {
+            originalStabilizeMood();
+            playBeep(800, 80);
+        };
+
+        // Analytics (optional - track game events)
+        function trackEvent(category, action, label) {
+            console.log(`Event: ${category} - ${action} - ${label}`);
+            // You can integrate with Google Analytics or other analytics services here
+        }
+
+        // Track evolution events
+        const originalEvolvePet = evolvePet;
+        evolvePet = function(newForm) {
+            trackEvent('Evolution', 'Evolved', newForm);
+            originalEvolvePet(newForm);
+        };
+
+        // Accessibility improvements
+        document.querySelectorAll('button').forEach(button => {
+            button.setAttribute('role', 'button');
+            button.setAttribute('tabindex', '0');
+            
+            button.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    button.click();
+                }
+            });
+        });
+
+        // Performance monitoring
+        let fps = 0;
+        let lastFrameTime = performance.now();
+        
+        function measureFPS() {
+            const now = performance.now();
+            fps = Math.round(1000 / (now - lastFrameTime));
+            lastFrameTime = now;
+        }
+
+        setInterval(measureFPS, 1000);
+
+        // Responsive canvas resize
+        function resizeCanvas() {
+            const canvas = document.getElementById('petCanvas');
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 40, 400);
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Prevent accidental page refresh
+        window.addEventListener('beforeunload', (e) => {
+            saveGame();
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        // Initialize tooltips (Bootstrap)
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        console.log(`
+        ╔═══════════════════════════════════════╗
+        ║                                       ║
+        ║       🦠 ProtoPet v1.0 🦠            ║
+        ║                                       ║
+        ║   Virtual Pet Evolution Game          ║
+        ║   Created with ❤️                     ║
+        ║                                       ║
+        ║   Easter Egg: Try the Konami Code!   ║
+        ║   ↑↑↓↓←→←→BA                         ║
+        ║                                       ║
+        ╚═══════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>
