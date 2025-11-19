@@ -1,633 +1,713 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Droplet, Sparkles, Zap, Moon, Sun, Trophy, Book, ShoppingBag, Dna, AlertCircle, Music } from 'lucide-react';
-
-const ProtoPetApp = () => {
-  const [darkMode, setDarkMode] = useState(true);
-  const [currentPage, setCurrentPage] = useState('home');
-  const [pet, setPet] = useState({
-    name: 'Virux',
-    species: 'Proto Virus',
-    evolution: 'egg',
-    level: 1,
-    energy: 80,
-    stability: 70,
-    mutationRate: 20,
-    affinity: 50,
-    hunger: 60,
-    mood: 75,
-    cleanliness: 80,
-    personality: 'Curious',
-    color: '#00ff88',
-    bioPoints: 100,
-    totalXP: 0,
-    habitat: 'Petri Glass',
-    lastFed: Date.now(),
-    lastCleaned: Date.now(),
-    mutationEvents: []
-  });
-
-  const [virusDex, setVirusDex] = useState(['egg']);
-  const [notification, setNotification] = useState(null);
-  const [miniGame, setMiniGame] = useState(null);
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-
-  // Evolution paths
-  const evolutions = {
-    egg: { name: 'Egg', next: ['baby'] },
-    baby: { name: 'Baby Virus', next: ['friendly', 'chaotic', 'dark'] },
-    friendly: { name: 'Glow Buddy', next: ['angel', 'helper'] },
-    chaotic: { name: 'Wild Spark', next: ['cosmic', 'glitch'] },
-    dark: { name: 'Shadow Virus', next: ['demon', 'phantom'] },
-    angel: { name: 'Celestial Protector', next: [] },
-    helper: { name: 'Bio Guardian', next: [] },
-    cosmic: { name: 'Star Drifter', next: [] },
-    glitch: { name: 'Data Anomaly', next: [] },
-    demon: { name: 'Void Spawn', next: [] },
-    phantom: { name: 'Ghost Virus', next: [] }
-  };
-
-  // Pet rendering
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width = 300;
-    const height = canvas.height = 300;
-    
-    let time = 0;
-    let bounce = 0;
-    let glowPulse = 0;
-    
-    const animate = () => {
-      ctx.clearRect(0, 0, width, height);
-      time += 0.02;
-      bounce = Math.sin(time * 2) * 10;
-      glowPulse = Math.sin(time * 3) * 0.3 + 0.7;
-      
-      const centerX = width / 2;
-      const centerY = height / 2 + bounce;
-      
-      // Glow effect
-      ctx.shadowBlur = 20 * glowPulse;
-      ctx.shadowColor = pet.color;
-      
-      // Draw pet based on evolution
-      if (pet.evolution === 'egg') {
-        // Egg shape
-        ctx.fillStyle = pet.color;
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY, 60, 80, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Spots
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.beginPath();
-        ctx.arc(centerX - 20, centerY - 20, 15, 0, Math.PI * 2);
-        ctx.arc(centerX + 15, centerY + 10, 10, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (pet.evolution === 'baby') {
-        // Baby virus body
-        ctx.fillStyle = pet.color;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Eyes
-        ctx.fillStyle = darkMode ? '#fff' : '#000';
-        ctx.beginPath();
-        ctx.arc(centerX - 15, centerY - 10, 8, 0, Math.PI * 2);
-        ctx.arc(centerX + 15, centerY - 10, 8, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Pupils
-        ctx.fillStyle = darkMode ? '#000' : '#fff';
-        ctx.beginPath();
-        ctx.arc(centerX - 15 + Math.sin(time) * 2, centerY - 10, 4, 0, Math.PI * 2);
-        ctx.arc(centerX + 15 + Math.sin(time) * 2, centerY - 10, 4, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Mouth
-        ctx.strokeStyle = darkMode ? '#fff' : '#000';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        if (pet.mood > 60) {
-          ctx.arc(centerX, centerY + 10, 15, 0, Math.PI);
-        } else {
-          ctx.arc(centerX, centerY + 25, 15, Math.PI, 0);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦠 ProtoPet - Virtual Pet Evolution</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        ctx.stroke();
-        
-        // Spikes
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          const spikeX = centerX + Math.cos(angle + time) * 60;
-          const spikeY = centerY + Math.sin(angle + time) * 60;
-          ctx.fillStyle = pet.color;
-          ctx.beginPath();
-          ctx.arc(spikeX, spikeY, 8, 0, Math.PI * 2);
-          ctx.fill();
+
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff88;
+            --neon-yellow: #ffff00;
+            --neon-orange: #ff6600;
+            --neon-purple: #9d00ff;
         }
-      } else {
-        // Advanced evolution forms
-        const size = 60;
-        ctx.fillStyle = pet.color;
-        
-        // Body
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, size, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Evolution-specific features
-        if (pet.evolution.includes('friendly') || pet.evolution.includes('angel') || pet.evolution.includes('helper')) {
-          // Friendly - halo or wings
-          ctx.strokeStyle = pet.color;
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY - 80, 25, 0, Math.PI * 2);
-          ctx.stroke();
-          
-          // Wings
-          ctx.fillStyle = `${pet.color}88`;
-          ctx.beginPath();
-          ctx.ellipse(centerX - 50, centerY, 30, 50, -0.3, 0, Math.PI * 2);
-          ctx.ellipse(centerX + 50, centerY, 30, 50, 0.3, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (pet.evolution.includes('chaotic') || pet.evolution.includes('cosmic') || pet.evolution.includes('glitch')) {
-          // Chaotic - erratic energy
-          for (let i = 0; i < 12; i++) {
-            const angle = (i / 12) * Math.PI * 2 + time * 2;
-            const dist = 70 + Math.random() * 20;
-            const px = centerX + Math.cos(angle) * dist;
-            const py = centerY + Math.sin(angle) * dist;
-            ctx.fillStyle = `hsl(${(time * 100 + i * 30) % 360}, 100%, 50%)`;
-            ctx.beginPath();
-            ctx.arc(px, py, 5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else if (pet.evolution.includes('dark') || pet.evolution.includes('demon') || pet.evolution.includes('phantom')) {
-          // Dark - horns and shadows
-          ctx.fillStyle = '#ff0066';
-          ctx.beginPath();
-          ctx.moveTo(centerX - 40, centerY - 50);
-          ctx.lineTo(centerX - 50, centerY - 80);
-          ctx.lineTo(centerX - 30, centerY - 60);
-          ctx.fill();
-          
-          ctx.beginPath();
-          ctx.moveTo(centerX + 40, centerY - 50);
-          ctx.lineTo(centerX + 50, centerY - 80);
-          ctx.lineTo(centerX + 30, centerY - 60);
-          ctx.fill();
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
         }
-        
-        // Eyes (all advanced forms)
-        ctx.fillStyle = darkMode ? '#fff' : '#000';
-        ctx.beginPath();
-        ctx.arc(centerX - 20, centerY - 10, 10, 0, Math.PI * 2);
-        ctx.arc(centerX + 20, centerY - 10, 10, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = pet.color;
-        ctx.beginPath();
-        ctx.arc(centerX - 20, centerY - 10, 5, 0, Math.PI * 2);
-        ctx.arc(centerX + 20, centerY - 10, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [pet, darkMode]);
 
-  // Stats decay over time
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPet(prev => {
-        const timeSinceLastFed = Date.now() - prev.lastFed;
-        const timeSinceLastCleaned = Date.now() - prev.lastCleaned;
-        
-        const hungerDecay = Math.floor(timeSinceLastFed / 60000); // 1 per minute
-        const cleanDecay = Math.floor(timeSinceLastCleaned / 120000); // 1 per 2 minutes
-        
-        const newHunger = Math.max(0, 100 - hungerDecay);
-        const newClean = Math.max(0, 100 - cleanDecay);
-        const newEnergy = Math.max(0, prev.energy - 0.1);
-        const newMood = Math.max(0, prev.mood - (newHunger < 30 ? 0.5 : 0.1));
-        
-        // Notifications
-        if (newHunger < 30 && prev.hunger >= 30) {
-          showNotification('🍔 Aku lapar! Beri aku makan!', 'warning');
+        body.dark-mode {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
+            color: #ffffff;
         }
-        if (newClean < 30 && prev.cleanliness >= 30) {
-          showNotification('🧹 Habitatku kotor! Tolong bersihkan!', 'warning');
+
+        body.light-mode {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e0e8ff 100%);
+            color: #1a1a2e;
         }
-        
-        // Random mutation event
-        if (prev.mutationRate > 50 && Math.random() < 0.001) {
-          triggerMutationEvent();
+
+        /* Glass Panel Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        
-        return {
-          ...prev,
-          hunger: newHunger,
-          cleanliness: newClean,
-          energy: newEnergy,
-          mood: newMood
-        };
-      });
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
-  // Evolution check
-  useEffect(() => {
-    const totalScore = pet.affinity + pet.mood + pet.cleanliness;
-    const avgCare = totalScore / 3;
-    
-    if (pet.evolution === 'egg' && pet.level >= 3) {
-      evolvePet('baby');
-    } else if (pet.evolution === 'baby' && pet.level >= 10) {
-      if (avgCare > 70) {
-        evolvePet('friendly');
-      } else if (avgCare > 40) {
-        evolvePet('chaotic');
-      } else {
-        evolvePet('dark');
-      }
-    } else if (pet.level >= 20 && evolutions[pet.evolution]?.next.length > 0) {
-      const nextEvolutions = evolutions[pet.evolution].next;
-      const nextEvo = nextEvolutions[Math.floor(Math.random() * nextEvolutions.length)];
-      evolvePet(nextEvo);
-    }
-  }, [pet.level]);
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
 
-  const evolvePet = (newForm) => {
-    setPet(prev => ({ ...prev, evolution: newForm }));
-    setVirusDex(prev => [...new Set([...prev, newForm])]);
-    showNotification(`🎉 ${pet.name} berevolusi menjadi ${evolutions[newForm].name}!`, 'success');
-  };
+        /* Neon Effects */
+        .neon-text {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+        }
 
-  const showNotification = (message, type = 'info') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+        .neon-border {
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan), inset 0 0 10px rgba(0, 255, 255, 0.2);
+        }
 
-  const feedPet = () => {
-    if (pet.bioPoints < 5) {
-      showNotification('⚠️ BioPoints tidak cukup!', 'error');
-      return;
-    }
-    
-    setPet(prev => ({
-      ...prev,
-      hunger: Math.min(100, prev.hunger + 30),
-      energy: Math.min(100, prev.energy + 20),
-      mood: Math.min(100, prev.mood + 10),
-      affinity: Math.min(100, prev.affinity + 2),
-      bioPoints: prev.bioPoints + 5,
-      totalXP: prev.totalXP + 10,
-      level: Math.floor((prev.totalXP + 10) / 100) + 1,
-      lastFed: Date.now()
-    }));
-    showNotification('🍔 Yummy! +5 BioPoints', 'success');
-  };
+        /* Pet Canvas Container */
+        #petCanvas {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 20px;
+            cursor: pointer;
+            touch-action: none;
+        }
 
-  const cleanPet = () => {
-    setPet(prev => ({
-      ...prev,
-      cleanliness: 100,
-      mood: Math.min(100, prev.mood + 5),
-      affinity: Math.min(100, prev.affinity + 1),
-      bioPoints: prev.bioPoints + 3,
-      totalXP: prev.totalXP + 5,
-      level: Math.floor((prev.totalXP + 5) / 100) + 1,
-      lastCleaned: Date.now()
-    }));
-    showNotification('✨ Bersih sekali! +3 BioPoints', 'success');
-  };
+        /* Stat Bars */
+        .stat-bar {
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+        }
 
-  const stabilizeMood = () => {
-    if (pet.bioPoints < 10) {
-      showNotification('⚠️ BioPoints tidak cukup!', 'error');
-      return;
-    }
-    
-    setPet(prev => ({
-      ...prev,
-      mood: 100,
-      stability: Math.min(100, prev.stability + 20),
-      bioPoints: prev.bioPoints - 10,
-      affinity: Math.min(100, prev.affinity + 5),
-      totalXP: prev.totalXP + 15,
-      level: Math.floor((prev.totalXP + 15) / 100) + 1
-    }));
-    showNotification('😊 Mood membaik! +15 XP', 'success');
-  };
+        .stat-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-  const triggerMutationEvent = () => {
-    const mutations = [
-      { type: 'color', desc: 'Warna tubuh berubah!' },
-      { type: 'organ', desc: 'Organ baru muncul!' },
-      { type: 'behavior', desc: 'Tingkah laku berubah!' },
-      { type: 'ability', desc: 'Kemampuan baru didapat!' }
-    ];
-    
-    const mutation = mutations[Math.floor(Math.random() * mutations.length)];
-    
-    if (mutation.type === 'color') {
-      const colors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#ff0066'];
-      setPet(prev => ({ ...prev, color: colors[Math.floor(Math.random() * colors.length)] }));
-    }
-    
-    showNotification(`🧬 MUTASI! ${mutation.desc}`, 'mutation');
-  };
+        .stat-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
 
-  const playMiniGame = (game) => {
-    setMiniGame(game);
-  };
+        @keyframes shimmer {
+            100% { left: 100%; }
+        }
 
-  const MiniGameBioRunner = () => {
-    const [score, setScore] = useState(0);
-    const [gameOver, setGameOver] = useState(false);
-    const [position, setPosition] = useState(50);
-    const [obstacles, setObstacles] = useState([{ x: 100, y: 50 }]);
+        /* Buttons */
+        .btn-neon {
+            position: relative;
+            padding: 12px 24px;
+            border: 2px solid;
+            border-radius: 15px;
+            background: transparent;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
 
-    useEffect(() => {
-      if (gameOver) return;
-      
-      const interval = setInterval(() => {
-        setObstacles(prev => {
-          const newObs = prev.map(o => ({ ...o, x: o.x - 5 })).filter(o => o.x > -10);
-          if (Math.random() < 0.02) {
-            newObs.push({ x: 100, y: Math.random() * 80 + 10 });
-          }
-          return newObs;
-        });
-        
-        // Collision detection
-        obstacles.forEach(obs => {
-          if (obs.x < 15 && obs.x > 5 && Math.abs(obs.y - position) < 15) {
-            setGameOver(true);
-          }
-        });
-        
-        if (!gameOver) setScore(s => s + 1);
-      }, 50);
-      
-      return () => clearInterval(interval);
-    }, [gameOver, obstacles, position]);
+        .btn-neon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px currentColor;
+        }
 
-    const jump = () => {
-      setPosition(p => Math.max(10, p - 30));
-      setTimeout(() => setPosition(p => Math.min(90, p + 30)), 300);
-    };
+        .btn-neon:active {
+            transform: translateY(0);
+        }
 
-    const endGame = () => {
-      const points = Math.floor(score / 10);
-      setPet(prev => ({
-        ...prev,
-        bioPoints: prev.bioPoints + points,
-        totalXP: prev.totalXP + points * 2,
-        level: Math.floor((prev.totalXP + points * 2) / 100) + 1
-      }));
-      showNotification(`🎮 Game Over! Score: ${score}, +${points} BioPoints`, 'success');
-      setMiniGame(null);
-    };
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: 600;
+            animation: slideDown 0.5s ease, slideUp 0.5s ease 2.5s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
 
-    return (
-      <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1000 }}>
-        <div className="bg-dark p-4 rounded" style={{ maxWidth: '500px', width: '90%' }}>
-          <h3 className="text-center mb-3">🦠 BioRunner</h3>
-          <div className="position-relative bg-secondary rounded" style={{ height: '300px', overflow: 'hidden' }}>
-            <div className="position-absolute rounded-circle bg-success" style={{ width: '30px', height: '30px', left: '10%', top: `${position}%` }}></div>
-            {obstacles.map((obs, i) => (
-              <div key={i} className="position-absolute rounded-circle bg-danger" style={{ width: '30px', height: '30px', left: `${obs.x}%`, top: `${obs.y}%` }}></div>
-            ))}
-          </div>
-          <div className="text-center mt-3">
-            <h4>Score: {score}</h4>
-            {!gameOver ? (
-              <button className="btn btn-primary btn-lg" onClick={jump}>JUMP</button>
-            ) : (
-              <button className="btn btn-success btn-lg" onClick={endGame}>Selesai</button>
-            )}
-          </div>
+        @keyframes slideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { top: 20px; opacity: 1; }
+            to { top: -100px; opacity: 0; }
+        }
+
+        /* Modal */
+        .modal-game {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-game.active {
+            display: flex;
+        }
+
+        .game-canvas {
+            background: #1a1a2e;
+            border-radius: 15px;
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 30px var(--neon-cyan);
+        }
+
+        /* Evolution Badge */
+        .evolution-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        /* VirusDex Card */
+        .virusdex-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .virusdex-card:hover {
+            transform: scale(1.05);
+        }
+
+        .virusdex-card.locked {
+            filter: grayscale(100%) brightness(0.5);
+        }
+
+        /* Personality Badge */
+        .personality-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 1.5rem;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--neon-cyan);
+            transform: scale(1.1);
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Shop Items */
+        .shop-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+        .float { animation: float 3s ease-in-out infinite; }
+        .glow { animation: glow 2s ease-in-out infinite; }
+
+        /* Hide scrollbar */
+        .page-content {
+            min-height: calc(100vh - 200px);
+            padding-bottom: 80px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-cyan) transparent;
+        }
+
+        .page-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .page-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .page-content::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 10px;
+        }
+
+        /* Color Selector */
+        .color-selector {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .color-selector:hover {
+            transform: scale(1.2);
+            border-color: white;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(0, 255, 255, 0.2);
+            border-top-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="text-center">
+            <div class="loader mx-auto mb-3"></div>
+            <h4 class="text-white neon-text">Loading ProtoPet...</h4>
         </div>
-      </div>
-    );
-  };
-
-  const StatBar = ({ label, value, icon: Icon, color }) => (
-    <div className="mb-3">
-      <div className="d-flex justify-content-between align-items-center mb-1">
-        <span className="d-flex align-items-center gap-2">
-          <Icon size={18} className={`text-${color}`} />
-          <small>{label}</small>
-        </span>
-        <small className="fw-bold">{Math.round(value)}%</small>
-      </div>
-      <div className="progress" style={{ height: '8px' }}>
-        <div 
-          className={`progress-bar bg-${color}`} 
-          style={{ width: `${value}%` }}
-        ></div>
-      </div>
     </div>
-  );
 
-  const HomePage = () => (
-    <div className="container py-4">
-      <div className="text-center mb-4">
-        <h2 className="mb-1">{pet.name}</h2>
-        <p className="text-muted mb-0">{evolutions[pet.evolution]?.name || 'Unknown'}</p>
-        <small className="text-muted">Lv. {pet.level} | {pet.personality}</small>
-      </div>
-
-      <div className="card mb-4" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', border: `2px solid ${pet.color}` }}>
-        <div className="card-body text-center">
-          <canvas ref={canvasRef} width={300} height={300} className="mx-auto d-block"></canvas>
-          <div className="mt-3">
-            <span className="badge bg-primary me-2">🏠 {pet.habitat}</span>
-            <span className="badge bg-warning">⭐ {pet.bioPoints} BioPoints</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="row g-2 mb-4">
-        <div className="col-6">
-          <button className="btn btn-success w-100" onClick={feedPet}>
-            <Droplet size={20} /> Feed
-          </button>
-        </div>
-        <div className="col-6">
-          <button className="btn btn-info w-100" onClick={cleanPet}>
-            <Sparkles size={20} /> Clean
-          </button>
-        </div>
-        <div className="col-6">
-          <button className="btn btn-warning w-100" onClick={stabilizeMood}>
-            <Heart size={20} /> Stabilize
-          </button>
-        </div>
-        <div className="col-6">
-          <button className="btn btn-primary w-100" onClick={() => playMiniGame('runner')}>
-            <Zap size={20} /> Play
-          </button>
-        </div>
-      </div>
-
-      <div className="card" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
-        <div className="card-body">
-          <StatBar label="Energy" value={pet.energy} icon={Zap} color="warning" />
-          <StatBar label="Hunger" value={pet.hunger} icon={Droplet} color="success" />
-          <StatBar label="Mood" value={pet.mood} icon={Heart} color="danger" />
-          <StatBar label="Cleanliness" value={pet.cleanliness} icon={Sparkles} color="info" />
-          <StatBar label="Affinity" value={pet.affinity} icon={Heart} color="primary" />
-          <StatBar label="Mutation Rate" value={pet.mutationRate} icon={Dna} color="secondary" />
-        </div>
-      </div>
-    </div>
-  );
-
-  const VirusDexPage = () => (
-    <div className="container py-4">
-      <h2 className="text-center mb-4">📖 VirusDex</h2>
-      <div className="row g-3">
-        {Object.keys(evolutions).map(evo => (
-          <div key={evo} className="col-6 col-md-4">
-            <div className={`card h-100 ${virusDex.includes(evo) ? '' : 'opacity-50'}`} style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
-              <div className="card-body text-center">
-                <div style={{ fontSize: '3rem' }}>
-                  {virusDex.includes(evo) ? '🦠' : '❓'}
-                </div>
-                <h6>{virusDex.includes(evo) ? evolutions[evo].name : '???'}</h6>
-                <small className="text-muted">{virusDex.includes(evo) ? evo : 'Locked'}</small>
-              </div>
+    <!-- Header -->
+    <nav class="navbar glass-panel sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1 neon-text" style="color: var(--neon-cyan);">
+                🦠 ProtoPet
+            </span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge evolution-badge" id="bioPointsDisplay">⭐ 100 BP</span>
+                <button class="btn btn-sm btn-outline-light" id="themeToggle">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
             </div>
-          </div>
-        ))}
-      </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-content" id="mainContent">
+        <!-- Home Page -->
+        <div class="page" id="homePage">
+            <div class="container py-4">
+                <div class="text-center mb-4">
+                    <h2 class="neon-text" id="petName">Virux</h2>
+                    <p class="text-muted mb-2" id="petSpecies">Proto Virus</p>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <span class="badge bg-primary">Lv. <span id="petLevel">1</span></span>
+                        <span class="personality-badge" id="personalityBadge">
+                            <i class="bi bi-star-fill"></i> Curious
+                        </span>
+                        <span class="badge" style="background: var(--neon-purple);" id="habitatBadge">
+                            🏠 Petri Glass
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Pet Display -->
+                <div class="glass-panel p-3 mb-4 neon-border">
+                    <canvas id="petCanvas" width="400" height="400"></canvas>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Tap untuk berinteraksi • Drag untuk memindahkan</small>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <button class="btn btn-neon w-100" style="color: var(--neon-green); border-color: var(--neon-green);" onclick="feedPet()">
+                            <i class="bi bi-droplet-fill"></i> Feed
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-neon w-100" style="color: var(--neon-cyan); border-color: var(--neon-cyan);" onclick="cleanPet()">
+                            <i class="bi bi-sparkles"></i> Clean
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-neon w-100" style="color: var(--neon-pink); border-color: var(--neon-pink);" onclick="stabilizeMood()">
+                            <i class="bi bi-heart-fill"></i> Stabilize
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-neon w-100" style="color: var(--neon-yellow); border-color: var(--neon-yellow);" onclick="openMiniGame()">
+                            <i class="bi bi-controller"></i> Play
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="glass-panel p-3">
+                    <h5 class="mb-3 neon-text" style="color: var(--neon-cyan);">
+                        <i class="bi bi-graph-up"></i> Status
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-lightning-fill text-warning"></i> Energy</small>
+                            <small><span id="energyStat">80</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="energyBar" style="width: 80%; background: linear-gradient(90deg, #ffd700, #ffa500);"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-droplet-fill text-success"></i> Hunger</small>
+                            <small><span id="hungerStat">60</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="hungerBar" style="width: 60%; background: linear-gradient(90deg, #00ff88, #00cc66);"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-heart-fill text-danger"></i> Mood</small>
+                            <small><span id="moodStat">75</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="moodBar" style="width: 75%; background: linear-gradient(90deg, #ff0066, #cc0055);"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-sparkles text-info"></i> Cleanliness</small>
+                            <small><span id="cleanStat">80</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="cleanBar" style="width: 80%; background: linear-gradient(90deg, #00ffff, #00cccc);"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-star-fill text-primary"></i> Affinity</small>
+                            <small><span id="affinityStat">50</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="affinityBar" style="width: 50%; background: linear-gradient(90deg, #9d00ff, #7700cc);"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <small><i class="bi bi-moisture text-secondary"></i> Mutation Rate</small>
+                            <small><span id="mutationStat">20</span>%</small>
+                        </div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" id="mutationBar" style="width: 20%; background: linear-gradient(90deg, #ff00ff, #cc00cc);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VirusDex Page -->
+        <div class="page" id="virusDexPage" style="display: none;">
+            <div class="container py-4">
+                <h2 class="text-center mb-4 neon-text" style="color: var(--neon-cyan);">
+                    <i class="bi bi-book-fill"></i> VirusDex
+                </h2>
+                <p class="text-center text-muted mb-4">Koleksi Evolusi: <span id="collectionCount">1</span>/11</p>
+                
+                <div class="row g-3" id="virusDexContainer">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Page -->
+        <div class="page" id="shopPage" style="display: none;">
+            <div class="container py-4">
+                <h2 class="text-center mb-4 neon-text" style="color: var(--neon-cyan);">
+                    <i class="bi bi-cart-fill"></i> BioShop
+                </h2>
+                
+                <div class="glass-panel p-3 mb-4">
+                    <h5 class="mb-3"><i class="bi bi-palette-fill"></i> Color Skins</h5>
+                    <div class="d-flex gap-3 flex-wrap justify-content-center">
+                        <div class="color-selector" style="background: #00ff88;" onclick="buyColor('#00ff88')"></div>
+                        <div class="color-selector" style="background: #ff00ff;" onclick="buyColor('#ff00ff')"></div>
+                        <div class="color-selector" style="background: #00ffff;" onclick="buyColor('#00ffff')"></div>
+                        <div class="color-selector" style="background: #ffff00;" onclick="buyColor('#ffff00')"></div>
+                        <div class="color-selector" style="background: #ff6600;" onclick="buyColor('#ff6600')"></div>
+                        <div class="color-selector" style="background: #ff0066;" onclick="buyColor('#ff0066')"></div>
+                        <div class="color-selector" style="background: #9d00ff;" onclick="buyColor('#9d00ff')"></div>
+                        <div class="color-selector" style="background: #00ff00;" onclick="buyColor('#00ff00')"></div>
+                    </div>
+                    <p class="text-center text-muted mt-2 mb-0">50 BioPoints each</p>
+                </div>
+
+                <div class="glass-panel p-3 mb-4">
+                    <h5 class="mb-3"><i class="bi bi-house-fill"></i> Habitat Upgrade</h5>
+                    <div class="shop-item mb-2" onclick="buyHabitat('Micro Lab', 200)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">🔬 Micro Lab</h6>
+                                <small class="text-muted">Enhanced growth environment</small>
+                            </div>
+                            <span class="badge bg-warning">200 BP</span>
+                        </div>
+                    </div>
+                    <div class="shop-item mb-2" onclick="buyHabitat('BioChamber', 500)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">🧪 BioChamber</h6>
+                                <small class="text-muted">Advanced mutation chamber</small>
+                            </div>
+                            <span class="badge bg-warning">500 BP</span>
+                        </div>
+                    </div>
+                    <div class="shop-item" onclick="buyHabitat('Quantum Habitat', 1000)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">⚡ Quantum Habitat</h6>
+                                <small class="text-muted">Ultimate evolution space</small>
+                            </div>
+                            <span class="badge bg-warning">1000 BP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-3">
+                    <h5 class="mb-3"><i class="bi bi-lightning-charge-fill"></i> DNA Boosters</h5>
+                    <div class="shop-item mb-2" onclick="buyBooster('energy', 30)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">⚡ Energy Boost</h6>
+                                <small class="text-muted">Restore 50% energy instantly</small>
+                            </div>
+                            <span class="badge bg-warning">30 BP</span>
+                        </div>
+                    </div>
+                    <div class="shop-item" onclick="buyBooster('mutation', 100)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">🧬 Mutation Accelerator</h6>
+                                <small class="text-muted">Trigger random mutation</small>
+                            </div>
+                            <span class="badge bg-warning">100 BP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" id="settingsPage" style="display: none;">
+            <div class="container py-4">
+                <h2 class="text-center mb-4 neon-text" style="color: var(--neon-cyan);">
+                    <i class="bi bi-gear-fill"></i> Settings
+                </h2>
+                
+                <div class="glass-panel p-3 mb-3">
+                    <h5 class="mb-3">Pet Information</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Pet Name</label>
+                        <input type="text" class="form-control" id="petNameInput" value="Virux">
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="updatePetName()">
+                        <i class="bi bi-check-circle"></i> Save Name
+                    </button>
+                </div>
+
+                <div class="glass-panel p-3 mb-3">
+                    <h5 class="mb-3">Game Data</h5>
+                    <button class="btn btn-success w-100 mb-2" onclick="saveToCloud()">
+                        <i class="bi bi-cloud-upload-fill"></i> Save to Cloud
+                    </button>
+                    <button class="btn btn-warning w-100 mb-2" onclick="loadFromCloud()">
+                        <i class="bi bi-cloud-download-fill"></i> Load from Cloud
+                    </button>
+                    <button class="btn btn-danger w-100" onclick="resetGame()">
+                        <i class="bi bi-arrow-clockwise"></i> Reset Game
+                    </button>
+                </div>
+
+                <div class="glass-panel p-3">
+                    <h5 class="mb-3">About</h5>
+                    <p class="mb-2"><strong>ProtoPet</strong> v1.0</p>
+                    <p class="text-muted mb-0">A virtual pet evolution game where your care determines your pet's evolution path!</p>
+                    <hr>
+                    <p class="text-muted mb-0 small">
+                        © 2024 ProtoPet. Made with 💚 for pet lovers.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
-  );
 
-  const ShopPage = () => (
-    <div className="container py-4">
-      <h2 className="text-center mb-4">🛒 BioShop</h2>
-      <p className="text-center text-muted mb-4">BioPoints: {pet.bioPoints}</p>
-      
-      <div className="card mb-3" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
-        <div className="card-body">
-          <h5>🎨 Color Skins</h5>
-          <div className="d-flex gap-2 flex-wrap">
-            {['#00ff88', '#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#ff0066'].map(color => (
-              <button 
-                key={color}
-                className="btn btn-sm"
-                style={{ backgroundColor: color, width: '40px', height: '40px' }}
-                onClick={() => {
-                  if (pet.bioPoints >= 50) {
-                    setPet(prev => ({ ...prev, color, bioPoints: prev.bioPoints - 50 }));
-                    showNotification('🎨 Warna berhasil dibeli!', 'success');
-                  } else {
-                    showNotification('⚠️ BioPoints tidak cukup!', 'error');
-                  }
-                }}
-              ></button>
-            ))}
-          </div>
-          <small className="text-muted">50 BioPoints each</small>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav glass-panel">
+        <div class="container">
+            <div class="d-flex justify-content-around">
+                <button class="nav-btn active" onclick="switchPage('homePage', this)">
+                    <i class="bi bi-house-fill"></i>
+                </button>
+                <button class="nav-btn" onclick="switchPage('virusDexPage', this)">
+                    <i class="bi bi-book-fill"></i>
+                </button>
+                <button class="nav-btn" onclick="switchPage('shopPage', this)">
+                    <i class="bi bi-cart-fill"></i>
+                </button>
+                <button class="nav-btn" onclick="switchPage('settingsPage', this)">
+                    <i class="bi bi-gear-fill"></i>
+                </button>
+            </div>
         </div>
-      </div>
-
-      <div className="card mb-3" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
-        <div className="card-body">
-          <h5>🏠 Habitat Upgrade</h5>
-          <button className="btn btn-primary w-100 mb-2" disabled>
-            Micro Lab - 200 BP
-          </button>
-          <button className="btn btn-primary w-100 mb-2" disabled>
-            BioChamber - 500 BP
-          </button>
-          <button className="btn btn-primary w-100" disabled>
-            Quantum Habitat - 1000 BP
-          </button>
-        </div>
-      </div>
     </div>
-  );
 
-  return (
-    <div className={`min-vh-100 ${darkMode ? 'bg-dark text-white' : 'bg-light text-dark'}`}>
-      {/* Notification */}
-      {notification && (
-        <div 
-          className={`position-fixed top-0 start-50 translate-middle-x mt-3 alert alert-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : notification.type === 'mutation' ? 'info' : 'danger'}`}
-          style={{ zIndex: 9999, minWidth: '300px' }}
-        >
-          {notification.message}
+    <!-- Mini Game Modal -->
+    <div class="modal-game" id="miniGameModal">
+        <div class="text-center">
+            <div class="mb-3">
+                <h3 class="text-white neon-text">🎮 BioRunner</h3>
+                <p class="text-muted">Hindari antibodi untuk bertahan!</p>
+            </div>
+            <canvas id="gameCanvas" class="game-canvas" width="350" height="500"></canvas>
+            <div class="mt-3">
+                <h4 class="text-white">Score: <span id="gameScore">0</span></h4>
+                <button class="btn btn-lg btn-primary" id="gameJumpBtn">JUMP</button>
+                <button class="btn btn-lg btn-danger ms-2" onclick="closeMiniGame()">EXIT</button>
+            </div>
         </div>
-      )}
-
-      {/* Mini Game */}
-      {miniGame === 'runner' && <MiniGameBioRunner />}
-
-      {/* Header */}
-      <nav className={`navbar ${darkMode ? 'bg-dark border-bottom border-secondary' : 'bg-light border-bottom'}`}>
-        <div className="container-fluid">
-          <span className="navbar-brand mb-0 h1">🦠 ProtoPet</span>
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setDarkMode(!darkMode)}
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Content */}
-      <div className="pb-5">
-        {currentPage === 'home' && <HomePage />}
-        {currentPage === 'dex' && <VirusDexPage />}
-        {currentPage === 'shop' && <ShopPage />}
-      </div>
-
-      {/* Bottom Navigation */}
-      <nav className={`navbar fixed-bottom ${darkMode ? 'bg-dark border-top border-secondary' : 'bg-light border-top'}`}>
-        <div className="container-fluid">
-          <div className="d-flex justify-content-around w-100">
-            <button 
-              className={`btn ${currentPage === 'home' ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setCurrentPage('home')}
-            >
-              <Heart size={20} />
-            </button>
-            <button 
-              className={`btn ${currentPage === 'dex' ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setCurrentPage('dex')}
-            >
-              <Book size={20} />
-            </button>
-            <button 
-              className={`btn ${currentPage === 'shop' ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setCurrentPage('shop')}
-            >
-              <ShoppingBag size={20} />
-            </button>
-          </div>
-        </div>
-      </nav>
     </div>
-  );
-};
 
-export default ProtoPetApp;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Game State
+        let gameState = {
+            pet: {
+                name: 'Virux',
+                species: 'Proto Virus',
+                evolution: 'egg',
+                level: 1,
+                energy: 80,
+                stability: 70,
+                mutationRate: 20,
+                affinity: 50,
+                hunger: 60,
+                mood: 75,
+                cleanliness: 80,
+                personality: 'Curious',
+                color: '#00ff88',
+                bioPoints: 100,
+                totalXP: 0,
+                habitat: 'Petri Glass',
+                lastFed: Date.now(),
+                lastCleaned: Date.now(),
+                x: 200,
+                y: 200
+            },
+            virusDex: ['egg'],
+            isDarkMode: true
+        };
+
+        // Evolution Data
+        const evolutions = {
+            egg: { name: 'Egg', emoji: '🥚', next: ['baby'] },
+            baby: { name: 'Baby Virus', emoji: '🦠', next: ['friendly', 'chaotic', 'dark'] },
+            friendly: { name: 'Glow Buddy', emoji: '✨', next: ['angel', 'helper'] },
+            chaotic: { name: 'Wild Spark', emoji: '⚡', next: ['cosmic', 'glitch'] },
+            dark: { name: 'Shadow Virus', emoji: '👻', next: ['demon', 'phantom'] },
+            angel: { name: 'Celestial Protector', emoji: '👼', next: [] },
+            helper: { name: 'Bio Guardian', emoji: '🛡️', next: [] },
+            cosmic: { name: 'Star Drifter', emoji: '
