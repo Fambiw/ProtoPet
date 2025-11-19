@@ -1,0 +1,633 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, Droplet, Sparkles, Zap, Moon, Sun, Trophy, Book, ShoppingBag, Dna, AlertCircle, Music } from 'lucide-react';
+
+const ProtoPetApp = () => {
+  const [darkMode, setDarkMode] = useState(true);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [pet, setPet] = useState({
+    name: 'Virux',
+    species: 'Proto Virus',
+    evolution: 'egg',
+    level: 1,
+    energy: 80,
+    stability: 70,
+    mutationRate: 20,
+    affinity: 50,
+    hunger: 60,
+    mood: 75,
+    cleanliness: 80,
+    personality: 'Curious',
+    color: '#00ff88',
+    bioPoints: 100,
+    totalXP: 0,
+    habitat: 'Petri Glass',
+    lastFed: Date.now(),
+    lastCleaned: Date.now(),
+    mutationEvents: []
+  });
+
+  const [virusDex, setVirusDex] = useState(['egg']);
+  const [notification, setNotification] = useState(null);
+  const [miniGame, setMiniGame] = useState(null);
+  const canvasRef = useRef(null);
+  const animationRef = useRef(null);
+
+  // Evolution paths
+  const evolutions = {
+    egg: { name: 'Egg', next: ['baby'] },
+    baby: { name: 'Baby Virus', next: ['friendly', 'chaotic', 'dark'] },
+    friendly: { name: 'Glow Buddy', next: ['angel', 'helper'] },
+    chaotic: { name: 'Wild Spark', next: ['cosmic', 'glitch'] },
+    dark: { name: 'Shadow Virus', next: ['demon', 'phantom'] },
+    angel: { name: 'Celestial Protector', next: [] },
+    helper: { name: 'Bio Guardian', next: [] },
+    cosmic: { name: 'Star Drifter', next: [] },
+    glitch: { name: 'Data Anomaly', next: [] },
+    demon: { name: 'Void Spawn', next: [] },
+    phantom: { name: 'Ghost Virus', next: [] }
+  };
+
+  // Pet rendering
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = 300;
+    const height = canvas.height = 300;
+    
+    let time = 0;
+    let bounce = 0;
+    let glowPulse = 0;
+    
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+      time += 0.02;
+      bounce = Math.sin(time * 2) * 10;
+      glowPulse = Math.sin(time * 3) * 0.3 + 0.7;
+      
+      const centerX = width / 2;
+      const centerY = height / 2 + bounce;
+      
+      // Glow effect
+      ctx.shadowBlur = 20 * glowPulse;
+      ctx.shadowColor = pet.color;
+      
+      // Draw pet based on evolution
+      if (pet.evolution === 'egg') {
+        // Egg shape
+        ctx.fillStyle = pet.color;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, 60, 80, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Spots
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(centerX - 20, centerY - 20, 15, 0, Math.PI * 2);
+        ctx.arc(centerX + 15, centerY + 10, 10, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (pet.evolution === 'baby') {
+        // Baby virus body
+        ctx.fillStyle = pet.color;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = darkMode ? '#fff' : '#000';
+        ctx.beginPath();
+        ctx.arc(centerX - 15, centerY - 10, 8, 0, Math.PI * 2);
+        ctx.arc(centerX + 15, centerY - 10, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Pupils
+        ctx.fillStyle = darkMode ? '#000' : '#fff';
+        ctx.beginPath();
+        ctx.arc(centerX - 15 + Math.sin(time) * 2, centerY - 10, 4, 0, Math.PI * 2);
+        ctx.arc(centerX + 15 + Math.sin(time) * 2, centerY - 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Mouth
+        ctx.strokeStyle = darkMode ? '#fff' : '#000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (pet.mood > 60) {
+          ctx.arc(centerX, centerY + 10, 15, 0, Math.PI);
+        } else {
+          ctx.arc(centerX, centerY + 25, 15, Math.PI, 0);
+        }
+        ctx.stroke();
+        
+        // Spikes
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const spikeX = centerX + Math.cos(angle + time) * 60;
+          const spikeY = centerY + Math.sin(angle + time) * 60;
+          ctx.fillStyle = pet.color;
+          ctx.beginPath();
+          ctx.arc(spikeX, spikeY, 8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // Advanced evolution forms
+        const size = 60;
+        ctx.fillStyle = pet.color;
+        
+        // Body
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Evolution-specific features
+        if (pet.evolution.includes('friendly') || pet.evolution.includes('angel') || pet.evolution.includes('helper')) {
+          // Friendly - halo or wings
+          ctx.strokeStyle = pet.color;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY - 80, 25, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          // Wings
+          ctx.fillStyle = `${pet.color}88`;
+          ctx.beginPath();
+          ctx.ellipse(centerX - 50, centerY, 30, 50, -0.3, 0, Math.PI * 2);
+          ctx.ellipse(centerX + 50, centerY, 30, 50, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (pet.evolution.includes('chaotic') || pet.evolution.includes('cosmic') || pet.evolution.includes('glitch')) {
+          // Chaotic - erratic energy
+          for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2 + time * 2;
+            const dist = 70 + Math.random() * 20;
+            const px = centerX + Math.cos(angle) * dist;
+            const py = centerY + Math.sin(angle) * dist;
+            ctx.fillStyle = `hsl(${(time * 100 + i * 30) % 360}, 100%, 50%)`;
+            ctx.beginPath();
+            ctx.arc(px, py, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (pet.evolution.includes('dark') || pet.evolution.includes('demon') || pet.evolution.includes('phantom')) {
+          // Dark - horns and shadows
+          ctx.fillStyle = '#ff0066';
+          ctx.beginPath();
+          ctx.moveTo(centerX - 40, centerY - 50);
+          ctx.lineTo(centerX - 50, centerY - 80);
+          ctx.lineTo(centerX - 30, centerY - 60);
+          ctx.fill();
+          
+          ctx.beginPath();
+          ctx.moveTo(centerX + 40, centerY - 50);
+          ctx.lineTo(centerX + 50, centerY - 80);
+          ctx.lineTo(centerX + 30, centerY - 60);
+          ctx.fill();
+        }
+        
+        // Eyes (all advanced forms)
+        ctx.fillStyle = darkMode ? '#fff' : '#000';
+        ctx.beginPath();
+        ctx.arc(centerX - 20, centerY - 10, 10, 0, Math.PI * 2);
+        ctx.arc(centerX + 20, centerY - 10, 10, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = pet.color;
+        ctx.beginPath();
+        ctx.arc(centerX - 20, centerY - 10, 5, 0, Math.PI * 2);
+        ctx.arc(centerX + 20, centerY - 10, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [pet, darkMode]);
+
+  // Stats decay over time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPet(prev => {
+        const timeSinceLastFed = Date.now() - prev.lastFed;
+        const timeSinceLastCleaned = Date.now() - prev.lastCleaned;
+        
+        const hungerDecay = Math.floor(timeSinceLastFed / 60000); // 1 per minute
+        const cleanDecay = Math.floor(timeSinceLastCleaned / 120000); // 1 per 2 minutes
+        
+        const newHunger = Math.max(0, 100 - hungerDecay);
+        const newClean = Math.max(0, 100 - cleanDecay);
+        const newEnergy = Math.max(0, prev.energy - 0.1);
+        const newMood = Math.max(0, prev.mood - (newHunger < 30 ? 0.5 : 0.1));
+        
+        // Notifications
+        if (newHunger < 30 && prev.hunger >= 30) {
+          showNotification('🍔 Aku lapar! Beri aku makan!', 'warning');
+        }
+        if (newClean < 30 && prev.cleanliness >= 30) {
+          showNotification('🧹 Habitatku kotor! Tolong bersihkan!', 'warning');
+        }
+        
+        // Random mutation event
+        if (prev.mutationRate > 50 && Math.random() < 0.001) {
+          triggerMutationEvent();
+        }
+        
+        return {
+          ...prev,
+          hunger: newHunger,
+          cleanliness: newClean,
+          energy: newEnergy,
+          mood: newMood
+        };
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Evolution check
+  useEffect(() => {
+    const totalScore = pet.affinity + pet.mood + pet.cleanliness;
+    const avgCare = totalScore / 3;
+    
+    if (pet.evolution === 'egg' && pet.level >= 3) {
+      evolvePet('baby');
+    } else if (pet.evolution === 'baby' && pet.level >= 10) {
+      if (avgCare > 70) {
+        evolvePet('friendly');
+      } else if (avgCare > 40) {
+        evolvePet('chaotic');
+      } else {
+        evolvePet('dark');
+      }
+    } else if (pet.level >= 20 && evolutions[pet.evolution]?.next.length > 0) {
+      const nextEvolutions = evolutions[pet.evolution].next;
+      const nextEvo = nextEvolutions[Math.floor(Math.random() * nextEvolutions.length)];
+      evolvePet(nextEvo);
+    }
+  }, [pet.level]);
+
+  const evolvePet = (newForm) => {
+    setPet(prev => ({ ...prev, evolution: newForm }));
+    setVirusDex(prev => [...new Set([...prev, newForm])]);
+    showNotification(`🎉 ${pet.name} berevolusi menjadi ${evolutions[newForm].name}!`, 'success');
+  };
+
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const feedPet = () => {
+    if (pet.bioPoints < 5) {
+      showNotification('⚠️ BioPoints tidak cukup!', 'error');
+      return;
+    }
+    
+    setPet(prev => ({
+      ...prev,
+      hunger: Math.min(100, prev.hunger + 30),
+      energy: Math.min(100, prev.energy + 20),
+      mood: Math.min(100, prev.mood + 10),
+      affinity: Math.min(100, prev.affinity + 2),
+      bioPoints: prev.bioPoints + 5,
+      totalXP: prev.totalXP + 10,
+      level: Math.floor((prev.totalXP + 10) / 100) + 1,
+      lastFed: Date.now()
+    }));
+    showNotification('🍔 Yummy! +5 BioPoints', 'success');
+  };
+
+  const cleanPet = () => {
+    setPet(prev => ({
+      ...prev,
+      cleanliness: 100,
+      mood: Math.min(100, prev.mood + 5),
+      affinity: Math.min(100, prev.affinity + 1),
+      bioPoints: prev.bioPoints + 3,
+      totalXP: prev.totalXP + 5,
+      level: Math.floor((prev.totalXP + 5) / 100) + 1,
+      lastCleaned: Date.now()
+    }));
+    showNotification('✨ Bersih sekali! +3 BioPoints', 'success');
+  };
+
+  const stabilizeMood = () => {
+    if (pet.bioPoints < 10) {
+      showNotification('⚠️ BioPoints tidak cukup!', 'error');
+      return;
+    }
+    
+    setPet(prev => ({
+      ...prev,
+      mood: 100,
+      stability: Math.min(100, prev.stability + 20),
+      bioPoints: prev.bioPoints - 10,
+      affinity: Math.min(100, prev.affinity + 5),
+      totalXP: prev.totalXP + 15,
+      level: Math.floor((prev.totalXP + 15) / 100) + 1
+    }));
+    showNotification('😊 Mood membaik! +15 XP', 'success');
+  };
+
+  const triggerMutationEvent = () => {
+    const mutations = [
+      { type: 'color', desc: 'Warna tubuh berubah!' },
+      { type: 'organ', desc: 'Organ baru muncul!' },
+      { type: 'behavior', desc: 'Tingkah laku berubah!' },
+      { type: 'ability', desc: 'Kemampuan baru didapat!' }
+    ];
+    
+    const mutation = mutations[Math.floor(Math.random() * mutations.length)];
+    
+    if (mutation.type === 'color') {
+      const colors = ['#00ff88', '#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#ff0066'];
+      setPet(prev => ({ ...prev, color: colors[Math.floor(Math.random() * colors.length)] }));
+    }
+    
+    showNotification(`🧬 MUTASI! ${mutation.desc}`, 'mutation');
+  };
+
+  const playMiniGame = (game) => {
+    setMiniGame(game);
+  };
+
+  const MiniGameBioRunner = () => {
+    const [score, setScore] = useState(0);
+    const [gameOver, setGameOver] = useState(false);
+    const [position, setPosition] = useState(50);
+    const [obstacles, setObstacles] = useState([{ x: 100, y: 50 }]);
+
+    useEffect(() => {
+      if (gameOver) return;
+      
+      const interval = setInterval(() => {
+        setObstacles(prev => {
+          const newObs = prev.map(o => ({ ...o, x: o.x - 5 })).filter(o => o.x > -10);
+          if (Math.random() < 0.02) {
+            newObs.push({ x: 100, y: Math.random() * 80 + 10 });
+          }
+          return newObs;
+        });
+        
+        // Collision detection
+        obstacles.forEach(obs => {
+          if (obs.x < 15 && obs.x > 5 && Math.abs(obs.y - position) < 15) {
+            setGameOver(true);
+          }
+        });
+        
+        if (!gameOver) setScore(s => s + 1);
+      }, 50);
+      
+      return () => clearInterval(interval);
+    }, [gameOver, obstacles, position]);
+
+    const jump = () => {
+      setPosition(p => Math.max(10, p - 30));
+      setTimeout(() => setPosition(p => Math.min(90, p + 30)), 300);
+    };
+
+    const endGame = () => {
+      const points = Math.floor(score / 10);
+      setPet(prev => ({
+        ...prev,
+        bioPoints: prev.bioPoints + points,
+        totalXP: prev.totalXP + points * 2,
+        level: Math.floor((prev.totalXP + points * 2) / 100) + 1
+      }));
+      showNotification(`🎮 Game Over! Score: ${score}, +${points} BioPoints`, 'success');
+      setMiniGame(null);
+    };
+
+    return (
+      <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1000 }}>
+        <div className="bg-dark p-4 rounded" style={{ maxWidth: '500px', width: '90%' }}>
+          <h3 className="text-center mb-3">🦠 BioRunner</h3>
+          <div className="position-relative bg-secondary rounded" style={{ height: '300px', overflow: 'hidden' }}>
+            <div className="position-absolute rounded-circle bg-success" style={{ width: '30px', height: '30px', left: '10%', top: `${position}%` }}></div>
+            {obstacles.map((obs, i) => (
+              <div key={i} className="position-absolute rounded-circle bg-danger" style={{ width: '30px', height: '30px', left: `${obs.x}%`, top: `${obs.y}%` }}></div>
+            ))}
+          </div>
+          <div className="text-center mt-3">
+            <h4>Score: {score}</h4>
+            {!gameOver ? (
+              <button className="btn btn-primary btn-lg" onClick={jump}>JUMP</button>
+            ) : (
+              <button className="btn btn-success btn-lg" onClick={endGame}>Selesai</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const StatBar = ({ label, value, icon: Icon, color }) => (
+    <div className="mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <span className="d-flex align-items-center gap-2">
+          <Icon size={18} className={`text-${color}`} />
+          <small>{label}</small>
+        </span>
+        <small className="fw-bold">{Math.round(value)}%</small>
+      </div>
+      <div className="progress" style={{ height: '8px' }}>
+        <div 
+          className={`progress-bar bg-${color}`} 
+          style={{ width: `${value}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+
+  const HomePage = () => (
+    <div className="container py-4">
+      <div className="text-center mb-4">
+        <h2 className="mb-1">{pet.name}</h2>
+        <p className="text-muted mb-0">{evolutions[pet.evolution]?.name || 'Unknown'}</p>
+        <small className="text-muted">Lv. {pet.level} | {pet.personality}</small>
+      </div>
+
+      <div className="card mb-4" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', border: `2px solid ${pet.color}` }}>
+        <div className="card-body text-center">
+          <canvas ref={canvasRef} width={300} height={300} className="mx-auto d-block"></canvas>
+          <div className="mt-3">
+            <span className="badge bg-primary me-2">🏠 {pet.habitat}</span>
+            <span className="badge bg-warning">⭐ {pet.bioPoints} BioPoints</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-2 mb-4">
+        <div className="col-6">
+          <button className="btn btn-success w-100" onClick={feedPet}>
+            <Droplet size={20} /> Feed
+          </button>
+        </div>
+        <div className="col-6">
+          <button className="btn btn-info w-100" onClick={cleanPet}>
+            <Sparkles size={20} /> Clean
+          </button>
+        </div>
+        <div className="col-6">
+          <button className="btn btn-warning w-100" onClick={stabilizeMood}>
+            <Heart size={20} /> Stabilize
+          </button>
+        </div>
+        <div className="col-6">
+          <button className="btn btn-primary w-100" onClick={() => playMiniGame('runner')}>
+            <Zap size={20} /> Play
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
+        <div className="card-body">
+          <StatBar label="Energy" value={pet.energy} icon={Zap} color="warning" />
+          <StatBar label="Hunger" value={pet.hunger} icon={Droplet} color="success" />
+          <StatBar label="Mood" value={pet.mood} icon={Heart} color="danger" />
+          <StatBar label="Cleanliness" value={pet.cleanliness} icon={Sparkles} color="info" />
+          <StatBar label="Affinity" value={pet.affinity} icon={Heart} color="primary" />
+          <StatBar label="Mutation Rate" value={pet.mutationRate} icon={Dna} color="secondary" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const VirusDexPage = () => (
+    <div className="container py-4">
+      <h2 className="text-center mb-4">📖 VirusDex</h2>
+      <div className="row g-3">
+        {Object.keys(evolutions).map(evo => (
+          <div key={evo} className="col-6 col-md-4">
+            <div className={`card h-100 ${virusDex.includes(evo) ? '' : 'opacity-50'}`} style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
+              <div className="card-body text-center">
+                <div style={{ fontSize: '3rem' }}>
+                  {virusDex.includes(evo) ? '🦠' : '❓'}
+                </div>
+                <h6>{virusDex.includes(evo) ? evolutions[evo].name : '???'}</h6>
+                <small className="text-muted">{virusDex.includes(evo) ? evo : 'Locked'}</small>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const ShopPage = () => (
+    <div className="container py-4">
+      <h2 className="text-center mb-4">🛒 BioShop</h2>
+      <p className="text-center text-muted mb-4">BioPoints: {pet.bioPoints}</p>
+      
+      <div className="card mb-3" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
+        <div className="card-body">
+          <h5>🎨 Color Skins</h5>
+          <div className="d-flex gap-2 flex-wrap">
+            {['#00ff88', '#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#ff0066'].map(color => (
+              <button 
+                key={color}
+                className="btn btn-sm"
+                style={{ backgroundColor: color, width: '40px', height: '40px' }}
+                onClick={() => {
+                  if (pet.bioPoints >= 50) {
+                    setPet(prev => ({ ...prev, color, bioPoints: prev.bioPoints - 50 }));
+                    showNotification('🎨 Warna berhasil dibeli!', 'success');
+                  } else {
+                    showNotification('⚠️ BioPoints tidak cukup!', 'error');
+                  }
+                }}
+              ></button>
+            ))}
+          </div>
+          <small className="text-muted">50 BioPoints each</small>
+        </div>
+      </div>
+
+      <div className="card mb-3" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}>
+        <div className="card-body">
+          <h5>🏠 Habitat Upgrade</h5>
+          <button className="btn btn-primary w-100 mb-2" disabled>
+            Micro Lab - 200 BP
+          </button>
+          <button className="btn btn-primary w-100 mb-2" disabled>
+            BioChamber - 500 BP
+          </button>
+          <button className="btn btn-primary w-100" disabled>
+            Quantum Habitat - 1000 BP
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`min-vh-100 ${darkMode ? 'bg-dark text-white' : 'bg-light text-dark'}`}>
+      {/* Notification */}
+      {notification && (
+        <div 
+          className={`position-fixed top-0 start-50 translate-middle-x mt-3 alert alert-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : notification.type === 'mutation' ? 'info' : 'danger'}`}
+          style={{ zIndex: 9999, minWidth: '300px' }}
+        >
+          {notification.message}
+        </div>
+      )}
+
+      {/* Mini Game */}
+      {miniGame === 'runner' && <MiniGameBioRunner />}
+
+      {/* Header */}
+      <nav className={`navbar ${darkMode ? 'bg-dark border-bottom border-secondary' : 'bg-light border-bottom'}`}>
+        <div className="container-fluid">
+          <span className="navbar-brand mb-0 h1">🦠 ProtoPet</span>
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <div className="pb-5">
+        {currentPage === 'home' && <HomePage />}
+        {currentPage === 'dex' && <VirusDexPage />}
+        {currentPage === 'shop' && <ShopPage />}
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className={`navbar fixed-bottom ${darkMode ? 'bg-dark border-top border-secondary' : 'bg-light border-top'}`}>
+        <div className="container-fluid">
+          <div className="d-flex justify-content-around w-100">
+            <button 
+              className={`btn ${currentPage === 'home' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setCurrentPage('home')}
+            >
+              <Heart size={20} />
+            </button>
+            <button 
+              className={`btn ${currentPage === 'dex' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setCurrentPage('dex')}
+            >
+              <Book size={20} />
+            </button>
+            <button 
+              className={`btn ${currentPage === 'shop' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setCurrentPage('shop')}
+            >
+              <ShoppingBag size={20} />
+            </button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+export default ProtoPetApp;
